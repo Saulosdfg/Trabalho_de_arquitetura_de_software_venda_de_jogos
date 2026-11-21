@@ -1,0 +1,70 @@
+{
+  "jogos": [
+    {
+      "id": 1,
+      "titulo": "Cyberpunk Adventure",
+      "preco": 199.9,
+      "categoria": "RPG",
+      "estoque": 0
+    },
+    {
+      "id": 2,
+      "titulo": "Space Strategy 2077",
+      "preco": 149.9,
+      "categoria": "Estratégia",
+      "estoque": 15
+    },
+    {
+      "id": 3,
+      "titulo": "Pixel Platformer",
+      "preco": 49.9,
+      "categoria": "Indie",
+      "estoque": 25
+    },
+    {
+      "id": 4,
+      "titulo": "Bluezao simulator",
+      "preco": 4.2,
+      "categoria": "Indie",
+      "estoque": 67
+    }
+  ],
+  "carrinhos": {
+    "usuario_123": []
+  },
+  "pedidos": [
+    {
+      "id": 1,
+      "usuarioId": "usuario_123",
+      "itens": [
+        {
+          "jogoId": 1,
+          "quantidade": 2
+        }
+      ],
+      "data": "2026-11-21T17:53:52.918Z"
+    },
+    {
+      "id": 2,
+      "usuarioId": "usuario_123",
+      "itens": [
+        {
+          "jogoId": 1,
+          "quantidade": 1
+        }
+      ],
+      "data": "2026-11-21T17:54:10.651Z"
+    },
+    {
+      "id": 3,
+      "usuarioId": "usuario_123",
+      "itens": [
+        {
+          "jogoId": 1,
+          "quantidade": 10
+        }
+      ],
+      "data": "2026-11-21T18:11:23.241Z"
+    }
+  ]
+}

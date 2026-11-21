@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Game Store - Client</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f4f4f9; }
+        .catalogo, .carrinho { background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .jogo-card { border: 1px solid #ddd; padding: 10px; margin: 10px 0; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
+        button { background: #007bff; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+
+    <h1>Web Game Store (Client-Server)</h1>
+
+    <div class="catalogo">
+        <h2>Catálogo de Jogos</h2>
+        <div id="lista-jogos">Carregando jogos do servidor...</div>
+    </div>
+
+    <div class="carrinho">
+        <h2>Seu Carrinho</h2>
+        <div id="lista-carrinho">Carrinho vazio</div>
+        <p><strong>Total: R$ <span id="valor-total">0.00</span></strong></p>
+        <button onclick="finalizarCompra()">Finalizar Compra</button>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+        const usuarioId = 'usuario_123'; // ID fictício do usuário logado
+
+        // 1. Buscar jogos do servidor ao carregar a página
+        async function carregarJogos() {
+            try {
+                const response = await fetch(`${API_URL}/jogos`);
+                const jogos = await response.json();
+                
+                const container = document.getElementById('lista-jogos');
+                container.innerHTML = '';
+
+                jogos.forEach(jogo => {
+                    container.innerHTML += `
+                        <div class="jogo-card">
+                            <div>
+                                <strong>${jogo.titulo}</strong> (${jogo.categoria}) - R$ ${jogo.preco.toFixed(2)} 
+                                <br><small>Estoque: ${jogo.estoque}</small>
+                            </div>
+                            <button onclick="adicionarAoCarrinho(${jogo.id})">Comprar</button>
+                        </div>
+                    `;
+                });
+            } catch (error) {
+                console.error('Erro ao carregar jogos:', error);
+            }
+        }
+
+        // 2. Adicionar item ao carrinho via API (POST)
+        async function adicionarAoCarrinho(jogoId) {
+            try {
+                const response = await fetch(`${API_URL}/carrinho`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ usuarioId, jogoId })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    alert('Jogo adicionado ao carrinho!');
+                    carregarCarrinho();
+                } else {
+                    alert(data.erro);
+                }
+            } catch (error) {
+                console.error('Erro de conexão com o servidor:', error);
+                alert('Não foi possível conectar ao servidor.');
+            }
+        }
+
+        // 3. Atualizar e exibir o carrinho (GET)
+        async function carregarCarrinho() {
+            try {
+                const response = await fetch(`${API_URL}/carrinho/${usuarioId}`);
+                const data = await response.json();
+
+                const container = document.getElementById('lista-carrinho');
+                container.innerHTML = '';
+
+                if (data.itens.length === 0) {
+                    container.innerHTML = 'Carrinho vazio';
+                    document.getElementById('valor-total').innerText = '0.00';
+                    return;
+                }
+
+                // AQUI DENTRO entra a renderização de cada item com os botões
+                data.itens.forEach(item => {
+                    container.innerHTML += `
+                <div style="margin: 6px 0;">
+                    ${item.titulo} (Qtd: ${item.quantidade}) - R$ ${(item.preco * item.quantidade).toFixed(2)}
+                    <button onclick="alterarQuantidade(${item.id}, -1)">-</button>
+                    <button onclick="alterarQuantidade(${item.id}, 1)">+</button>
+                    <button onclick="removerDoCarrinho(${item.id})">Remover</button>
+                </div>
+            `;
+                });
+
+                document.getElementById('valor-total').innerText = data.valorTotal.toFixed(2);
+            } catch (error) {
+                console.error('Erro ao carregar carrinho:', error);
+                alert('Não foi possível conectar ao servidor.');
+            }
+        }
+
+        // 4. Realizar Checkout (POST)
+        async function finalizarCompra() {
+            try{
+                const response = await fetch(`${API_URL}/checkout`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ usuarioId })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    alert('Compra finalizada com sucesso!');
+                    carregarJogos();
+                    carregarCarrinho();
+                }
+                else {
+                    alert(data.erro);
+                }
+            }
+            catch (error) {
+                console.error('Erro de conexão com o servidor:', error);
+                alert('Não foi possível conectar ao servidor.');
+            }
+        }
+
+        // Inicializar dados na tela
+        carregarJogos();
+        carregarCarrinho();
+
+        async function alterarQuantidade(jogoId, delta) {
+            try {
+                const response = await fetch(`${API_URL}/carrinho/item`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ usuarioId, jogoId, delta })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    carregarCarrinho();
+                } else {
+                    alert(data.erro);
+                }
+            } catch (error) {
+                console.error('Erro ao alterar quantidade:', error);
+                alert('Não foi possível conectar ao servidor.');
+            }
+        }
+
+        async function removerDoCarrinho(jogoId) {
+            try {
+                const response = await fetch(`${API_URL}/carrinho/${usuarioId}/${jogoId}`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    carregarCarrinho();
+                } else {
+                    alert(data.erro);
+                }
+            } catch (error) {
+                console.error('Erro ao remover item:', error);
+                alert('Não foi possível conectar ao servidor.');
+            }
+        }
+    </script>
+</body>
+</html>
